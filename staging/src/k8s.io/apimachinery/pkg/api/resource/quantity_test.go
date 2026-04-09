@@ -1820,3 +1820,70 @@ func TestQuantityRoundtripCBOR(t *testing.T) {
 		}
 	}
 }
+
+func TestParseQuantity(t *testing.T) {
+	tests := []struct {
+		input       string
+		wantAsInt64 bool
+		canonical   string
+	}{
+		// min/max 18 digits
+		{input: "-999999999999999999", wantAsInt64: true},
+		{input: "999999999999999999", wantAsInt64: true},
+
+		// min/max 19 digits
+		{input: "-9999999999999999999", wantAsInt64: false},
+		{input: "9999999999999999999", wantAsInt64: false},
+		{input: "-1E", wantAsInt64: true, canonical: "-1E"},
+		{input: "1E", wantAsInt64: true, canonical: "1E"},
+		{input: "-1000000000000000000", wantAsInt64: false, canonical: "-1E"}, // should be wantAsInt64: true
+		{input: "1000000000000000000", wantAsInt64: false, canonical: "1E"},   // should be wantAsInt64: true
+
+		// min/max 20 digits
+		{input: "-10E", wantAsInt64: false, canonical: "-10E"},
+		{input: "10E", wantAsInt64: false, canonical: "10E"},
+		{input: "-10000000000000000000", wantAsInt64: false, canonical: "-10E"},
+		{input: "10000000000000000000", wantAsInt64: false, canonical: "10E"},
+
+		// min/max int64 - 1
+		{input: "-9223372036854775809", wantAsInt64: false},
+		{input: "9223372036854775806", wantAsInt64: false}, // should be wantAsInt64: true
+
+		// min/max int64
+		{input: "-9223372036854775808", wantAsInt64: false}, // should be wantAsInt64: true
+		{input: "9223372036854775807", wantAsInt64: false},  // should be wantAsInt64: true
+
+		// min/max int64 + 1
+		{input: "-9223372036854775807", wantAsInt64: false}, // should be wantAsInt64: true
+		{input: "9223372036854775808", wantAsInt64: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			q, err := ParseQuantity(tt.input)
+			if err != nil {
+				t.Fatalf("unexpected error for input %q: %v", tt.input, err)
+			}
+
+			val, ok := q.AsInt64()
+			if ok != tt.wantAsInt64 {
+				t.Errorf("AsInt64() returned ok=%v for input %q, want ok=%v", ok, tt.input, tt.wantAsInt64)
+				return
+			}
+			if ok {
+				t.Logf("parsed %q → %d", tt.input, val)
+			} else {
+				t.Logf("parsed %q → stored as decimal (too large for int64)", tt.input)
+			}
+
+			serialized := q.String()
+			expectedString := tt.input
+			if tt.canonical != "" {
+				expectedString = tt.canonical
+			}
+			if serialized != expectedString {
+				t.Errorf("expected input %q to reserialize to %q but got %q", tt.input, expectedString, serialized)
+			}
+		})
+	}
+}
