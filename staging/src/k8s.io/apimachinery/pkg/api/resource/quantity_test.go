@@ -1836,8 +1836,8 @@ func TestParseQuantity(t *testing.T) {
 		{input: "9999999999999999999", wantAsInt64: false},
 		{input: "-1E", wantAsInt64: true, canonical: "-1E"},
 		{input: "1E", wantAsInt64: true, canonical: "1E"},
-		{input: "-1000000000000000000", wantAsInt64: false, canonical: "-1E"}, // should be wantAsInt64: true
-		{input: "1000000000000000000", wantAsInt64: false, canonical: "1E"},   // should be wantAsInt64: true
+		{input: "-1000000000000000000", wantAsInt64: true, canonical: "-1E"},
+		{input: "1000000000000000000", wantAsInt64: true, canonical: "1E"},
 
 		// min/max 20 digits
 		{input: "-10E", wantAsInt64: false, canonical: "-10E"},
@@ -1847,14 +1847,14 @@ func TestParseQuantity(t *testing.T) {
 
 		// min/max int64 - 1
 		{input: "-9223372036854775809", wantAsInt64: false},
-		{input: "9223372036854775806", wantAsInt64: false}, // should be wantAsInt64: true
+		{input: "9223372036854775806", wantAsInt64: true},
 
 		// min/max int64
-		{input: "-9223372036854775808", wantAsInt64: false}, // should be wantAsInt64: true
-		{input: "9223372036854775807", wantAsInt64: false},  // should be wantAsInt64: true
+		{input: "-9223372036854775808", wantAsInt64: true},
+		{input: "9223372036854775807", wantAsInt64: true},
 
 		// min/max int64 + 1
-		{input: "-9223372036854775807", wantAsInt64: false}, // should be wantAsInt64: true
+		{input: "-9223372036854775807", wantAsInt64: true},
 		{input: "9223372036854775808", wantAsInt64: false},
 	}
 
