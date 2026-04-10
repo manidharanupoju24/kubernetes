@@ -1910,6 +1910,13 @@ func TestMustParseNearMaxInt64(t *testing.T) {
 				t.Errorf("unexpected error for input %q: %v", tt.input, err)
 				return
 			}
+			// Only verify round-trip for values that fit in int64 (integer path).
+			// Values in the decimal path may canonicalize differently.
+			if tt.wantAsInt64 {
+				if got := q.String(); got != tt.input {
+					t.Errorf("String() round-trip failed for input %q: got %q", tt.input, got)
+				}
+			}
 			val, ok := q.AsInt64()
 			if ok != tt.wantAsInt64 {
 				t.Errorf("AsInt64() returned ok=%v for input %q, want ok=%v", ok, tt.input, tt.wantAsInt64)
